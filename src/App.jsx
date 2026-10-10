@@ -1,79 +1,159 @@
 import React, { useState } from 'react';
-import './app.css';
+import './App.css';
 
-// Child component - Greeting Card (demonstrates props)
-function GreetingCard({ name }) {
-  return (
-    <div className="greeting-card">
-      {/* Conditional rendering: show greeting only if name is entered */}
-      {name ? (
-        <h2 className="greeting-text">Hello {name} welcome to my react app</h2>
-      ) : (
-        <p className="placeholder-text">Enter your name above to see your greeting</p>
-      )}
-    </div>
-  );
-}
-
-// Child component - Info Section (demonstrates props)
-function InfoSection({ title, description }) {
-  return (
-    <section className="info-section">
-      <h2>{title}</h2>
-      <p>{description}</p>
-    </section>
-  );
-}
-
-// Main App component
 function App() {
-  // State: manage user name input
-  const [name, setName] = useState('');
+  const [students, setStudents] = useState([]);
+  const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    email: '',
+    course: ''
+  });
 
-  // Event handler: Update name as user types
-  const handleNameChange = (e) => {
-    setName(e.target.value);
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  // Add a new student
+  const handleAddStudent = (e) => {
+    e.preventDefault();
+    if (formData.name.trim() === '' || formData.email.trim() === '') {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    const newStudent = {
+      id: Date.now(),
+      name: formData.name,
+      email: formData.email,
+      course: formData.course || 'Not Assigned'
+    };
+
+    setStudents([...students, newStudent]);
+    setFormData({ id: '', name: '', email: '', course: '' });
+  };
+
+  // Add/Update course for a student
+  const handleAddCourse = (studentId) => {
+    const courseInput = prompt('Enter course name:');
+    if (courseInput && courseInput.trim() !== '') {
+      setStudents(
+        students.map(student =>
+          student.id === studentId
+            ? { ...student, course: courseInput }
+            : student
+        )
+      );
+    }
+  };
+
+  // Delete a student
+  const handleDeleteStudent = (studentId) => {
+    if (window.confirm('Are you sure you want to delete this student?')) {
+      setStudents(students.filter(student => student.id !== studentId));
+    }
   };
 
   return (
-    <div className="app-container">
-      {/* Main heading */}
-      <header className="app-header">
-        <h1>My First React App</h1>
-      </header>
+    <div className="App">
+      <div className="container">
+        <h1>Student Registration System</h1>
 
-      <main className="app-main">
-        {/* Info section about frontend developer */}
-        <InfoSection
-          title="About Frontend Development"
-          description="Frontend development is the art of creating beautiful, interactive user experiences. It combines HTML, CSS, and JavaScript to build responsive web applications. Frontend developers use frameworks like React to manage complex user interfaces efficiently and create seamless interactions."
-        />
+        {/* Add Student Form */}
+        <div className="form-container">
+          <h2>Add New Student</h2>
+          <form onSubmit={handleAddStudent}>
+            <div className="form-group">
+              <label htmlFor="name">Student Name:</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter student name"
+              />
+            </div>
 
-        {/* Input field section */}
-        <div className="input-section">
-          <label htmlFor="name-input" className="input-label">
-            Enter your name:
-          </label>
-          <input
-            id="name-input"
-            type="text"
-            className="name-input"
-            placeholder="Type your name here..."
-            value={name}
-            onChange={handleNameChange}
-          />
+            <div className="form-group">
+              <label htmlFor="email">Email Address:</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Enter email address"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="course">Course (Optional):</label>
+              <input
+                type="text"
+                id="course"
+                name="course"
+                value={formData.course}
+                onChange={handleInputChange}
+                placeholder="Enter course name"
+              />
+            </div>
+
+            <button type="submit" className="btn btn-add">
+              Add Student
+            </button>
+          </form>
         </div>
 
-        {/* Greeting card - passes name as prop */}
-        <GreetingCard name={name} />
-
-        {/* Conditional rendering: show character count only if name has content */}
-        {name && (
-          <div className="char-count">
-            <p>Character count: {name.length}</p>
-          </div>
-        )}
-      </main>
+        {/* Display Students */}
+        <div className="students-container">
+          <h2>Registered Students</h2>
+          {students.length === 0 ? (
+            <p className="no-students">No students registered yet.</p>
+          ) : (
+            <table className="students-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Course</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map(student => (
+                  <tr key={student.id}>
+                    <td>{student.id}</td>
+                    <td>{student.name}</td>
+                    <td>{student.email}</td>
+                    <td>{student.course}</td>
+                    <td className="actions">
+                      <button
+                        className="btn btn-course"
+                        onClick={() => handleAddCourse(student.id)}
+                      >
+                        Add/Update Course
+                      </button>
+                      <button
+                        className="btn btn-delete"
+                        onClick={() => handleDeleteStudent(student.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
